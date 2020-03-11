@@ -23,7 +23,8 @@ APPLICATION_NAME = "Restaurant Menu Application"
 
 
 # Connect to Database and create database session
-engine = create_engine('sqlite:///restaurantmenuwithusers.db')
+
+engine = create_engine('postgresql://catalog:password@localhost/catalog')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -38,9 +39,9 @@ def showRestaurants():
     restaurants = session.query(Restaurant).order_by(asc(Restaurant.name))
     res = restaurants
     if 'username' not in login_session:
-        return r_t('publicrestaurants.html', restaurants=res)
+        return r_t('templates/publicrestaurants.html', restaurants=res)
     else:
-        return r_t('restaurants.html', restaurants=res)
+        return r_t('templates/restaurants.html', restaurants=res)
 
 
 # Show a restaurant menu PUBLIC
@@ -62,11 +63,11 @@ def showMenu(restaurant_id):
     cretor = getUserInfo(restaurant.user_id)
     cm = cretor.name
     if 'username' in login_session and login_session['username'] == cm:
-        return r_t('menu.html', items=it, restaurant=res, creator=cretor)
+        return r_t('templates/menu.html', items=it, restaurant=res, creator=cretor)
     elif 'username' in login_session and login_session['username'] != cm:
-        return r_t('notOwner.html', items=it, restaurant=res, creator=cretor)
+        return r_t('templates/notOwner.html', items=it, restaurant=res, creator=cretor)
     else:
-        return r_t('publicmenu.html', items=it, restaurant=res, creator=cretor)
+        return r_t('templates/publicmenu.html', items=it, restaurant=res, creator=cretor)
 
 # //////////////////////////  END SET FILES FOR NOT REGESTERED USERS
 
@@ -78,7 +79,7 @@ def showLogin():
                     for x in xrange(32))
     login_session['state'] = state
     # return "The current session state is %s" % login_session['state']
-    return r_t('login.html', STATE=state)
+    return r_t('templates/login.html', STATE=state)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -237,7 +238,7 @@ def gdisconnect():
         del login_session['email']
         del login_session['picture']
         restaurants = session.query(Restaurant).order_by(asc(Restaurant.name))
-        return r_t('publicrestaurants.html', restaurants=restaurants)
+        return r_t('templates/publicrestaurants.html', restaurants=restaurants)
     else:
         # For whatever reason, the given token was invalid.
         response = make_response(
@@ -280,7 +281,7 @@ def newRestaurant():
         session.commit()
         return redirect(url_for('showRestaurants'))
     else:
-        return r_t('newRestaurant.html')
+        return r_t('templates/newRestaurant.html')
 
 # Edit a restaurant
 
@@ -306,7 +307,7 @@ def editRestaurant(restaurant_id):
             flash('Restaurant Successfully Edited %s' % editedRestaurant.name)
             return redirect(url_for('showRestaurants'))
     else:
-        return r_t('editRestaurant.html', restaurant=editedRestaurant)
+        return r_t('templates/editRestaurant.html', restaurant=editedRestaurant)
 
 
 # Delete a restaurant
@@ -360,7 +361,7 @@ def newMenuItem(restaurant_id):
         flash('New Menu %s Item Successfully Created' % (newItem.name))
         return redirect(url_for('showMenu', restaurant_id=restaurant_id))
     else:
-        return r_t('newmenuitem.html', restaurant_id=restaurant_id)
+        return r_t('templates/newmenuitem.html', restaurant_id=restaurant_id)
 
 # Edit a menu item
 
@@ -397,7 +398,7 @@ def editMenuItem(restaurant_id, menu_id):
         return redirect(url_for('showMenu', restaurant_id=restaurant_id))
     else:
         return r_t(
-            'editmenuitem.html',
+            'templates/editmenuitem.html',
             restaurant_id=restaurant_id, menu_id=menu_id,
             item=editedItem)
 
@@ -432,4 +433,4 @@ def deleteMenuItem(restaurant_id, menu_id):
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.debug = True
-    app.run(host='0.0.0.0')
+    app.run(host='127.0.0.1:8000')
